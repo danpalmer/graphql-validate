@@ -1,31 +1,25 @@
 """CLI handling for `graphql-validate`."""
-import logging
-
 import click
 
-logger = logging.getLogger("graphql_validate")
+from graphql_validate.logging import set_verbosity
+from graphql_validate.schemas import resolve_schema_cli
+
+verbosity = click.option(
+    "-v", "--verbose", help="Log all output.", is_flag=True, callback=set_verbosity
+)
 
 
 @click.group()
-@click.option("-v", "--verbose", help="Log all output.", is_flag=True)
-def main(verbose):
-    """Shared entrypoint."""
-    if verbose:
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.CRITICAL)
+def cli():
+    """Main entrypoint."""
 
 
-@main.command()
+@cli.command()
+@verbosity
 @click.option(
     "--strict", help="Be strict about documentation formatting.", is_flag=True
 )
-@click.option(
-    "-s",
-    "--schema",
-    help="The schema to inspect, must be either HTTP(s) or a local file",
-    type=str,
-)
-def documentation(strict, schema):  # pragma: no cover
+@click.argument("schema", callback=resolve_schema_cli)
+def documentation(strict, schema, verbose):  # pragma: no cover
     """Lint a schema's documentation."""
     click.echo(click.style("Done", fg="green"))

@@ -28,8 +28,8 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
     ),
-    install_requires=(),
+    install_requires=("graphql-core-next", "click", "requests"),
     setup_requires=("pytest-runner",),
     tests_require=("pytest", "networkx", "tox", "pytest-cov", "pytest-pythonpath"),
-    entry_points={"console_scripts": ("graphql-validate = graphql_validate.cli:main",)},
+    entry_points={"console_scripts": ("graphql-validate = graphql_validate.cli:cli",)},
 )
