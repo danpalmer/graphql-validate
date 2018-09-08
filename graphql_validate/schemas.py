@@ -46,9 +46,7 @@ def _resolve_url(ctx, url: str) -> Optional[GraphQLSchema]:
 
     try:
         response = requests.post(
-            url,
-            data={"query": query},
-            headers={"Accept": "application/json"},
+            url, data={"query": query}, headers={"Accept": "application/json"}
         )
         response.raise_for_status()
     except requests.RequestException:
@@ -60,7 +58,7 @@ def _resolve_url(ctx, url: str) -> Optional[GraphQLSchema]:
         raise ValueError("Received invalid JSON from GraphQL endpoint")
 
     try:
-        return build_client_schema(data['data'])
+        return build_client_schema(data["data"])
     except Exception:
         raise ValueError("Could not decode schema")
 
