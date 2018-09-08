@@ -1,0 +1,96 @@
+version: 2
+
+jobs:
+  test:
+    working_directory: ~/graphql-validate
+    docker:
+      - image: circleci/python:3.6.3
+
+    steps:
+      - checkout
+
+        # Set up a cached virtualenv in which to install tox
+      - restore_cache:
+          name: Restore build dependency cache
+          key: deps-venv-2.9.1-1.2.0
+      - run:
+          name: Install tox
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install tox==2.9.1
+            pip install coveralls==1.2.0
+      - save_cache:
+          name: Save build dependency cache
+          key: deps-venv-2.9.1-1.2.0
+          paths:
+            - "venv"
+
+      # Run tox, caching the .tox directory
+      - restore_cache:
+          name: Restore .tox cache
+          key: deps-tox-{{ checksum "scripts/linting/requirements.txt" }}-{{ checksum "scripts/typechecking/requirements.txt" }}-{{ checksum "scripts/testing/requirements.txt" }}-{{ checksum "setup.py" }}
+      - run:
+          name: Tox
+          command: |
+            . venv/bin/activate
+            tox
+      - save_cache:
+          name: Save .tox cache
+          key: deps-tox-{{ checksum "scripts/linting/requirements.txt" }}-{{ checksum "scripts/typechecking/requirements.txt" }}-{{ checksum "scripts/testing/requirements.txt" }}-{{ checksum "setup.py" }}
+          paths:
+            - ".tox"
+
+      # Testing done, store results
+      - store_test_results:
+          path: build/results
+      - store_artifacts:
+          path: build/artifacts/coverage
+          destination: coverage
+      - run:
+          name: Report coverage
+          command: |
+            . venv/bin/activate
+            coveralls
+
+  release:
+    working_directory: ~/graphql-validate
+    docker:
+      - image: circleci/python:3.6.3
+    steps:
+      - checkout
+
+      - run:
+          name: init .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+
+      - run:
+          name: PyPI Upload
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install twine wheel
+
+            python setup.py sdist
+            python setup.py bdist_wheel
+            twine upload dist/*
+
+workflows:
+  version: 2
+  build-release:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /.*/
+      - release:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*/
+            branches:
+              only: master
