@@ -3,6 +3,7 @@ import sys
 import collections
 
 import click
+from graphql import GraphQLObjectType
 
 from graphql_validate.grammar import check_grammar
 from graphql_validate.logging import logger, set_verbosity
@@ -24,26 +25,58 @@ def cli():
 def documentation(schema, verbose):  # pragma: no cover
     """Lint a schema's documentation."""
 
-    issues = collections.defaultdict(list)
+    type_issues = collections.defaultdict(list)
+    field_issues = collections.defaultdict(lambda: collections.defaultdict(list))
+
     logger.debug("Linting description fields in schema")
 
     for type_name, type_ in schema.type_map.items():
         logger.debug("Linting {name} description.".format(name=type_name))
 
         if type_.description is None:
-            issues[type_name].append("Missing documentation")
+            type_issues[type_name].append("Missing documentation")
         else:
-            issues[type_name] = list(check_grammar(type_.description))
+            type_issues[type_name] = list(check_grammar(type_.description))
 
-    for type_name, doc_issues in sorted(issues.items()):
-        if not doc_issues:
+        if not isinstance(type_, GraphQLObjectType):
             continue
+
+        for field_name, field in type_.fields.items():
+            if field.description is None:
+                field_issues[type_name][field_name].append("Missing documentation")
+            else:
+                field_issues[type_name][field_name] = list(
+                    check_grammar(field.description)
+                )
+
+    num_issues = 0
+    for type_name, doc_type_issues in sorted(type_issues.items()):
+        if not doc_type_issues:
+            continue
+
         click.echo(click.style("\n  " + type_name, fg="blue"))
-        for issue in doc_issues:
+        for issue in doc_type_issues:
+            num_issues += 1
             click.echo("   - " + issue)
 
-    if issues:
-        click.echo(click.style("\nIssues detected.", fg="red"))
+        if type_name not in field_issues:
+            continue
+
+        for field_name, doc_field_issues in field_issues[type_name].items():
+            if not doc_field_issues:
+                continue
+
+            click.echo(click.style("\n     " + field_name, fg="blue"))
+            for issue in doc_field_issues:
+                num_issues += 1
+                click.echo("      - " + issue)
+
+    if type_issues:
+        click.echo(
+            click.style(
+                "\n{num_issues} Issues detected".format(num_issues=num_issues), fg="red"
+            )
+        )
         sys.exit(1)
     else:
         click.echo(click.style("No issues detected.", fg="green"))
