@@ -58,7 +58,8 @@ def _print_issues(issues: Iterable[TypeIssue]):
     if issues:
         click.echo(
             click.style(
-                "\n{num_issues} Issues detected".format(num_issues=num_issues), fg="red"
+                "\n  {num_issues} Issues detected\n".format(num_issues=num_issues),
+                fg="red",
             )
         )
         sys.exit(1)
