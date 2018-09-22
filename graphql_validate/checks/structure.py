@@ -1,7 +1,7 @@
 """
 Checks on the structure of a GraphQL schema.
 """
-from typing import List
+from typing import Iterable
 
 from graphql import (
     is_input_object_type,
@@ -17,7 +17,7 @@ from .issues import TypeIssue
 RELAY_FIELD_LIST_NAME = "edges"
 
 
-def get_structural_issues(schema) -> List[TypeIssue]:
+def get_structural_issues(schema) -> Iterable[TypeIssue]:
     """Gets an iterable of structural issues with a schema."""
 
     logger.debug("Linting structure of schema")

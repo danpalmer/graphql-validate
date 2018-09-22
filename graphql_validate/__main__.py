@@ -5,6 +5,6 @@ This is to enable `python -m graphql-validate` if that is needed for any reason,
 normal use should be to use the `graphql-validate` command-line tool directly.
 """
 
-from graphql_validate.cli import main
+from graphql_validate.cli import cli
 
-main()
+cli()

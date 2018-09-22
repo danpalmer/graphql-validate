@@ -3,15 +3,18 @@ Checks for the presence and validity of documentation.
 """
 
 import collections
-from typing import List, Optional
+from typing import Iterable, Optional, TYPE_CHECKING
 
 from graphql import is_object_type
 
 from ..logging import logger
 from .issues import TypeIssue
 
+if TYPE_CHECKING:
+    from typing import List, Mapping  # noqa: F401
 
-def get_documentation_issues(schema) -> List[TypeIssue]:
+
+def get_documentation_issues(schema) -> Iterable[TypeIssue]:
     """Get an iterable of documentation issues."""
 
     logger.debug("Linting description fields in schema")
@@ -29,7 +32,7 @@ def get_documentation_issues(schema) -> List[TypeIssue]:
         else:
             type_issues = list(check_grammar(type_.description))
 
-        field_issues = collections.defaultdict(list)
+        field_issues = collections.defaultdict(list)  # type: Mapping[str, List[str]]
         if is_object_type(type_):
             for field_name, field in type_.fields.items():
                 if not field.description:
@@ -51,7 +54,7 @@ def get_documentation_issues(schema) -> List[TypeIssue]:
             )
 
 
-def check_grammar(text: Optional[str]) -> [str]:
+def check_grammar(text: Optional[str]) -> Iterable[str]:
     """Return a list of human-readable issues with the given text."""
     if not text:
         return
