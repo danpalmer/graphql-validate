@@ -45,7 +45,7 @@ def get_documentation_issues(schema):
                 else:
                     field_issues[field_name] = list(check_grammar(field.description))
 
-        if type_issues or field_issues:
+        if type_issues or any(field_issues.values()):
             yield TypeIssue(
                 type_name=type_name, type_issues=type_issues, field_issues=field_issues
             )
