@@ -5,7 +5,7 @@ from typing import Optional
 
 import click
 import requests
-from graphql import GraphQLSchema, build_client_schema, get_introspection_query
+from graphql import build_client_schema, get_introspection_query, GraphQLSchema
 
 from graphql_validate.logging import logger
 

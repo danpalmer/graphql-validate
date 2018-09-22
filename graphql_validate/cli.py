@@ -1,12 +1,10 @@
 """CLI handling for `graphql-validate`."""
 import sys
-import collections
 
 import click
-from graphql import GraphQLObjectType
 
-from graphql_validate.grammar import check_grammar
-from graphql_validate.logging import logger, set_verbosity
+from graphql_validate.checks import get_documentation_issues
+from graphql_validate.logging import set_verbosity
 from graphql_validate.schemas import resolve_schema_cli
 
 verbosity = click.option(
@@ -25,53 +23,25 @@ def cli():
 def documentation(schema, verbose):  # pragma: no cover
     """Lint a schema's documentation."""
 
-    type_issues = collections.defaultdict(list)
-    field_issues = collections.defaultdict(lambda: collections.defaultdict(list))
-
-    logger.debug("Linting description fields in schema")
-
-    for type_name, type_ in schema.type_map.items():
-        logger.debug("Linting {name} description.".format(name=type_name))
-
-        if type_.description is None:
-            type_issues[type_name].append("Missing documentation")
-        else:
-            type_issues[type_name] = list(check_grammar(type_.description))
-
-        if not isinstance(type_, GraphQLObjectType):
-            continue
-
-        for field_name, field in type_.fields.items():
-            if field.description is None:
-                field_issues[type_name][field_name].append("Missing documentation")
-            else:
-                field_issues[type_name][field_name] = list(
-                    check_grammar(field.description)
-                )
+    issues = get_documentation_issues(schema)
 
     num_issues = 0
-    for type_name, doc_type_issues in sorted(type_issues.items()):
-        if not doc_type_issues:
-            continue
-
-        click.echo(click.style("\n  " + type_name, fg="blue"))
-        for issue in doc_type_issues:
+    for type_issue in sorted(issues, key=lambda x: x.type_name):
+        click.echo(click.style("\n  " + type_issue.type_name, fg="blue"))
+        for issue in type_issue.type_issues:
             num_issues += 1
             click.echo("   - " + issue)
 
-        if type_name not in field_issues:
-            continue
-
-        for field_name, doc_field_issues in field_issues[type_name].items():
-            if not doc_field_issues:
-                continue
-
-            click.echo(click.style("\n     " + field_name, fg="blue"))
-            for issue in doc_field_issues:
+        for field_name, field_issues in sorted(type_issue.field_issues.items()):
+            for field_issue in field_issues:
                 num_issues += 1
-                click.echo("      - " + issue)
+                click.echo(
+                    "   - {0}: {1}".format(
+                        click.style(field_name, fg="yellow"), field_issue
+                    )
+                )
 
-    if type_issues:
+    if issues:
         click.echo(
             click.style(
                 "\n{num_issues} Issues detected".format(num_issues=num_issues), fg="red"
