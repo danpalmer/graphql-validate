@@ -3,7 +3,7 @@ Checks for the presence and validity of documentation.
 """
 
 import collections
-from typing import List, Mapping, NamedTuple
+from typing import List, Mapping, NamedTuple, Optional
 
 from graphql import GraphQLObjectType
 
@@ -40,10 +40,18 @@ def get_documentation_issues(schema):
         field_issues = collections.defaultdict(list)
         if isinstance(type_, GraphQLObjectType):
             for field_name, field in type_.fields.items():
-                if field.description is None:
+                if not field.description:
                     field_issues[field_name].append("Missing documentation")
-                else:
-                    field_issues[field_name] = list(check_grammar(field.description))
+
+                field_issues[field_name].extend(list(check_grammar(field.description)))
+
+                if field.is_deprecated:
+                    if not field.deprecation_reason:
+                        field_issues[field_name].append("Missing deprecation reason")
+
+                    field_issues[field_name].extend(
+                        list(check_grammar(field.deprecation_reason))
+                    )
 
         if type_issues or any(field_issues.values()):
             yield TypeIssue(
@@ -51,10 +59,9 @@ def get_documentation_issues(schema):
             )
 
 
-def check_grammar(text: str) -> [str]:
+def check_grammar(text: Optional[str]) -> [str]:
     """Return a list of human-readable issues with the given text."""
     if not text:
-        yield "Empty documentation"
         return
 
     if text.strip() != text:
