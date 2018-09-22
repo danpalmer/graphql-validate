@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+black \
+	graphql_validate \
+	setup.py \
+	version.py
+
+isort -rc \
+	graphql_validate \
+	setup.py \
+	version.py

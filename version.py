@@ -4,10 +4,10 @@ Versioning utils.
 
 __all__ = ("get_version",)
 
-import os
-import re
 import logging
+import os
 import os.path
+import re
 import subprocess
 from os.path import dirname
 
