@@ -12,7 +12,7 @@ setup(
     url="https://github.com/danpalmer/graphql-validate",
     description="GraphQL API Validation toolkit.",
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     author="Dan Palmer",
     author_email="dan@danpalmer.me",
     keywords=("graphql",),
