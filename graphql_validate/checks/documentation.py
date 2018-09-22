@@ -5,7 +5,7 @@ Checks for the presence and validity of documentation.
 import collections
 from typing import List, Optional
 
-from graphql import GraphQLObjectType
+from graphql import is_object_type
 
 from ..logging import logger
 from .issues import TypeIssue
@@ -30,7 +30,7 @@ def get_documentation_issues(schema) -> List[TypeIssue]:
             type_issues = list(check_grammar(type_.description))
 
         field_issues = collections.defaultdict(list)
-        if isinstance(type_, GraphQLObjectType):
+        if is_object_type(type_):
             for field_name, field in type_.fields.items():
                 if not field.description:
                     field_issues[field_name].append("Missing documentation")
