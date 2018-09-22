@@ -3,23 +3,15 @@ Checks for the presence and validity of documentation.
 """
 
 import collections
-from typing import List, Mapping, NamedTuple, Optional
+from typing import List, Optional
 
 from graphql import GraphQLObjectType
 
 from ..logging import logger
-
-TypeIssue = NamedTuple(
-    "TypeIssue",
-    (
-        ("type_name", str),
-        ("type_issues", List[str]),
-        ("field_issues", Mapping[str, List[str]]),
-    ),
-)
+from .issues import TypeIssue
 
 
-def get_documentation_issues(schema):
+def get_documentation_issues(schema) -> List[TypeIssue]:
     """Get an iterable of documentation issues."""
 
     logger.debug("Linting description fields in schema")

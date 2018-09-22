@@ -1,9 +1,14 @@
 """CLI handling for `graphql-validate`."""
 import sys
+from typing import Iterable
 
 import click
 
-from graphql_validate.checks import get_documentation_issues
+from graphql_validate.checks import (
+    get_documentation_issues,
+    get_structural_issues,
+    TypeIssue,
+)
 from graphql_validate.logging import set_verbosity
 from graphql_validate.schemas import resolve_schema_cli
 
@@ -22,9 +27,18 @@ def cli():
 @click.argument("schema", callback=resolve_schema_cli)
 def documentation(schema, verbose):  # pragma: no cover
     """Lint a schema's documentation."""
+    _print_issues(get_documentation_issues(schema))
 
-    issues = get_documentation_issues(schema)
 
+@cli.command()
+@verbosity
+@click.argument("schema", callback=resolve_schema_cli)
+def structure(schema, verbose):  # pragma: no cover
+    """Lint a schema's structure."""
+    _print_issues(get_structural_issues(schema))
+
+
+def _print_issues(issues: Iterable[TypeIssue]):
     num_issues = 0
     for type_issue in sorted(issues, key=lambda x: x.type_name):
         click.echo(click.style("\n  " + type_issue.type_name, fg="blue"))
